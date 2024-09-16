@@ -34,6 +34,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
     int velocityX; //to make the snake move, we need velocity. positive-->right, negative-->left
     int velocityY;
 
+    boolean gameOver= false;
 
     SnakeGame(int boardWidth, int boardHeight){
         //constructor to initialize the board width and height
@@ -49,6 +50,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         setFocusable(true);
 
         snakeHead = new Tile(5, 5); 
+        snakeBody=new ArrayList<Tile>();
+
         food=new Tile(10,10);
         random= new Random();
 
@@ -57,7 +60,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         velocityX=0;
         velocityY=0; 
 
-        gameLoop=new Timer(100, this); //100ms=1/10 of a sec
+        gameLoop=new Timer(200, this); //100ms=1/10 of a sec
         gameLoop.start(); //start the game loop
 
     }
@@ -67,19 +70,45 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
     }
     //draw object defined
     public void draw(Graphics g){
+        /* instead of grid lines try 3Drect 
+
         //draw grid lines
+
         for(int i=0;i<boardWidth/tileSize;i++){
             g.drawLine(i*tileSize, 0, i*tileSize, boardHeight); //vertical lines
             g.drawLine(0, i*tileSize, boardWidth, i*tileSize); //horizontal lines
-        }
+        }*/
 
         //draw food
         g.setColor(Color.red);
-        g.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+        // g.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+        g.fill3DRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize, true);
+        // what 3D rect will do is, it will craete border around tile which will help us distinguish tiles in snake body
 
         //draw the snake head
         g.setColor(Color.green);
         g.fillRect(snakeHead.x * tileSize, snakeHead.y *tileSize, tileSize, tileSize); 
+        g.fill3DRect(snakeHead.x * tileSize, snakeHead.y *tileSize, tileSize, tileSize, true); 
+
+
+        //snake body
+        for(int i=0; i<snakeBody.size() ;i++){
+            Tile snakePart= snakeBody.get(i);
+            // g.fillRect(snakePart.x * tileSize, snakePart.y * tileSize, tileSize, tileSize);
+            g.fill3DRect(snakePart.x * tileSize, snakePart.y * tileSize, tileSize, tileSize, true);
+
+        }
+
+        //score-board
+        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        if(gameOver){
+            g.setColor(Color.yellow);
+            g.drawString("Game Over!", 200, 300);
+            // g.drawString("Score: "+String.valueOf(snakeBody.size()), tileSize-16, tileSize, 200, 300);
+            // g.drawString("score: "+ String.valueOf(snakeBody.size()), tileSize-16, tileSize);
+        }else{
+            g.drawString("score: "+ String.valueOf(snakeBody.size()), tileSize-16, tileSize);
+        }
     }
 
     public void placeFood(){
@@ -88,16 +117,58 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         food.y=random.nextInt(boardHeight/tileSize);
     }
 
+    //function to detect collision of snakes headwith food
+    public boolean collision(Tile tile1, Tile tile2){
+        return tile1.x==tile2.x && tile1.y==tile2.y;
+    }
+
     public void move(){
+        //eat food
+        if(collision(snakeHead, food)){
+            snakeBody.add(new Tile(food.x, food.y));
+            placeFood();
+        }
+
+        //move snake body before the snake head
+        for(int i=snakeBody.size()-1; i>=0; i--){
+            Tile snakePart = snakeBody.get(i);
+            if(i==0){
+                snakePart.x=snakeHead.x;
+                snakePart.y=snakeHead.y;
+            }else{
+                Tile prevSnakePart= snakeBody.get(i-1);
+                snakePart.x=prevSnakePart.x;
+                snakePart.y= prevSnakePart.y;
+            }
+        }
+
         //snake head
         snakeHead.x += velocityX;
         snakeHead.y +=velocityY;
-    }
+
+        //game over condition
+        for(int i=0; i<snakeBody.size(); i++){
+            //if the snake collides with its own body
+            Tile snakePart= snakeBody.get(i);
+            if(collision(snakeHead, snakePart)){
+                gameOver= true;
+            }
+        }
+
+        //if snake head hits any wall
+        if(snakeHead.x * tileSize<0 || snakeHead.x*tileSize > boardWidth ||
+            snakeHead.y*tileSize<0 || snakeHead.y*tileSize > boardHeight){
+            gameOver= true;
+        }}
 
     @Override
     public void actionPerformed(ActionEvent e) {
         move(); //will update x and y position of the sanke
         repaint(); //will call draw over and over again
+
+        if(gameOver){
+            gameLoop.stop();
+        }
     }
 
     //method that need to be overided to implement KeyListener
