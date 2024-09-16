@@ -3,7 +3,7 @@ import javax.swing.*; //swing lib is imported to create interface
 public class App {
     public static void main(String[] args) throws Exception {
         //setting the size of the pop-up window in px
-        int boardWidth=700;
+        int boardWidth=600;
         int boardHeight=boardWidth;
 
         //creating window
@@ -18,6 +18,6 @@ public class App {
         SnakeGame snakeGame=new SnakeGame(boardWidth, boardHeight);
         frame.add(snakeGame);
         frame.pack(); //.stack()-->a Window class in Java and it sizes the frame so that all its contents are at or above their preferred sizes
-        
+        snakeGame.requestFocus(); //the snakeGame will listen to the key presses
     }
 }
