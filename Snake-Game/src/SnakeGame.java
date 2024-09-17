@@ -35,6 +35,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
     int velocityY;
 
     boolean gameOver= false;
+    int highScore=0; //to store high score
 
     SnakeGame(int boardWidth, int boardHeight){
         //constructor to initialize the board width and height
@@ -109,6 +110,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         }else{
             g.drawString("score: "+ String.valueOf(snakeBody.size()), tileSize-16, tileSize);
         }
+
+        // Update high score if needed
+        if (snakeBody.size() > highScore) {
+            highScore = snakeBody.size();
+            // Display high score after game over
+         }
+         g.drawString("High Score: " + highScore, tileSize-16, tileSize+30);
     }
 
     public void placeFood(){
@@ -159,7 +167,9 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         if(snakeHead.x * tileSize<0 || snakeHead.x*tileSize > boardWidth ||
             snakeHead.y*tileSize<0 || snakeHead.y*tileSize > boardHeight){
             gameOver= true;
-        }}
+        }
+
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -186,6 +196,22 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{  /
         }else if(e.getKeyCode() == KeyEvent.VK_RIGHT && velocityX!=-1){
             velocityX=1;
             velocityY=0;
+        }
+
+        
+        if (e.getKeyCode() == KeyEvent.VK_SPACE && gameOver) {
+            // Reset game to default state
+            snakeBody.clear();
+            placeFood();
+            snakeHead = new Tile(5, 5); //reset snake head position
+            velocityX=0;
+            velocityY=0;
+            // score = 0;
+            gameOver = false;
+            
+            if(!gameLoop.isRunning()){
+                gameLoop.start();
+            }
         }
     }
 
